@@ -13,6 +13,9 @@
 
 import { Request, Response } from "express";
 import User from "./user.model";
+import { AppError } from "../../utils/AppError";
+import { asyncHandler } from "../../utils/asyncHandler";
+import mongoose from "mongoose";
 
 /**
  * Create a new user
@@ -116,10 +119,7 @@ export const getUserById = async (req: Request, res: Response) => {
          * If user not found, return 404
          */
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
+            throw new AppError("User not found - Global Handler", 404);
         }
 
         /**
@@ -146,47 +146,26 @@ export const getUserById = async (req: Request, res: Response) => {
  *
  * Route: GET /api/users/:id
  */
-export const deleteUserById = async (req: Request, res: Response) => {
-    try {
-        /**
-         * Extract ID from URL parameters
-         * Example: /api/users/123
-         */
-        const { id } = req.params;
+export const deleteUserById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
 
-        /**
-         * Find user by MongoDB _id
-         */
-        const user = await User.findByIdAndDelete(id);
 
-        /**
-         * If user not found, return 404
-         */
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found",
-            });
-        }
-
-        /**
-         * If found, return user
-         */
-        return res.status(200).json({
-            success: true,
-            message: "User deleted successfully",
-        });
-
-    } catch (error) {
-        /**
-         * If invalid ID format or DB error
-         */
-        return res.status(500).json({
-            success: false,
-            message: "Failed to delete user",
-        });
+    // ✅ Check valid Mongo ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id as string)) {
+        throw new AppError("Invalid user ID", 400);
     }
-};
+
+    const user = await User.findByIdAndDelete(id);
+
+    if (!user) {
+        throw new AppError("User not found - GH", 404);
+    }
+
+    res.status(200).json({
+        status: "success",
+        message: "User deleted successfully",
+    });
+});
 
 /**
  * Update user by ID
