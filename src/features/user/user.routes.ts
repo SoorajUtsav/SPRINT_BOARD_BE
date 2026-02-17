@@ -1,70 +1,73 @@
-/**
- * user.routes.ts
- *
- * Responsibility:
- * - Define all HTTP endpoints related to Users
- * - Map routes to controller functions
- *
- * This file does NOT contain business logic.
- * It only connects URLs to controllers.
- */
-
 import { Router } from "express";
-import { createUser, getUsers, getUserById,deleteUserById,updateUserById } from "./user.controller";
+import {
+  createUser,
+  getUsers,
+  getUserById,
+  updateUserById,
+  deleteUserById,
+} from "./user.controller";
 
-/**
- * Create a new Express Router instance
- *
- * Router allows grouping related routes together.
- * Think of it as a mini express app for "user" feature.
- */
+import { validate } from "../../middlewares/validate.middleware";
+import {
+  createUserSchema,
+  updateUserSchema,
+  userIdParamSchema,
+} from "./user.validation";
+
 const router = Router();
 
 /**
- * POST /
- *
- * This means:
- * When a POST request hits the base route,
- * call createUser controller.
- *
- * Full route becomes:
- * POST /api/users
- * (because it is mounted in app.ts)
+ * CREATE USER
+ * -----------
+ * Validation runs BEFORE controller.
  */
-router.post("/", createUser);
+router.post(
+  "/",
+  validate(createUserSchema),
+  createUser
+);
 
 /**
- * GET /
- *
- * Fetch all users.
- *
- * Full route becomes:
- * GET /api/users
+ * GET ALL USERS
+ * -------------
+ * No validation needed (no body/params).
  */
 router.get("/", getUsers);
 
 /**
- * GET /:id
- *
- * Fetch single user by ID
+ * GET USER BY ID
+ * --------------
+ * Validate route params before controller executes.
  */
-router.get("/:id", getUserById);
+router.get(
+  "/:id",
+  validate(userIdParamSchema),
+  getUserById
+);
 
 /**
- * GET /:id
- *
- * Delete single user by ID
+ * UPDATE USER (PATCH semantics)
+ * -----------------------------
+ * Validate BOTH:
+ * - params (:id)
+ * - body (partial update rules)
  */
-router.delete("/:id", deleteUserById);
+router.patch(
+  "/:id",
+  validate(userIdParamSchema),
+  validate(updateUserSchema),
+  updateUserById
+);
 
 /**
- * PUT /:id
- *
- * Update user by ID
+ * DELETE USER
+ * -----------
+ * Only params validation required.
  */
-router.put("/:id", updateUserById);
+router.delete(
+  "/:id",
+  validate(userIdParamSchema),
+  deleteUserById
+);
 
-/**
- * Export router so it can be registered in app.ts
- */
 export default router;
