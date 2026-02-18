@@ -17,6 +17,7 @@ import morgan from "morgan";
 
 // Import feature routes
 import userRoutes from "./features/user/user.routes";
+import authRoutes from "./features/auth/auth.routes";
 import { globalErrorHandler } from "./middlewares/error.middleware";
 
 // Create Express application instance
@@ -54,6 +55,7 @@ app.get("/health", (_req, res) => {
  *
  * Base path: /api/users
  */
+app.use("/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use(globalErrorHandler);
 

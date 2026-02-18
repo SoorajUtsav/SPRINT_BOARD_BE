@@ -8,6 +8,7 @@
  */
 
 import mongoose, { Document, Schema } from "mongoose";
+import bcrypt from "bcrypt";
 
 /**
  * TypeScript Interface
@@ -16,8 +17,12 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IUser extends Document {
   name: string;
   email: string;
+  password: string;
   createdAt: Date;
   updatedAt: Date;
+
+  comparePassword(candidatePassword: string): Promise<boolean>;
+
 }
 
 /**
@@ -37,11 +42,37 @@ const userSchema = new Schema<IUser>(
       lowercase: true,
       trim: true,
     },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false, // 🔒 never return password by default
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt & updatedAt
   }
 );
+
+/**
+ * Pre-save hook → hash password
+ */
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
+
+  const saltRounds = 10;
+  this.password = await bcrypt.hash(this.password, saltRounds);
+});
+
+
+/**
+ * Instance method → compare password during login
+ */
+userSchema.methods.comparePassword = async function (
+  candidatePassword: string
+): Promise<boolean> {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 /**
  * Export Model
