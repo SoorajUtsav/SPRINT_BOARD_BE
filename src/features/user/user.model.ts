@@ -20,6 +20,8 @@ export interface IUser extends Document {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  role: string;
+
 
   comparePassword(candidatePassword: string): Promise<boolean>;
 
