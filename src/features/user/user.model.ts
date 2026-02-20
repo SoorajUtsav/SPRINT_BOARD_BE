@@ -21,6 +21,7 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   role: string;
+  id: string; // Virtual getter for _id
 
 
   comparePassword(candidatePassword: string): Promise<boolean>;
